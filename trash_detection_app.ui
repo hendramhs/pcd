@@ -1,0 +1,629 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1200</width>
+    <height>800</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Aplikasi Deteksi dan Klasifikasi Sampah Sungai</string>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">background-color: #f0f0f0;</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QVBoxLayout" name="verticalLayout">
+    <item>
+     <widget class="QLabel" name="titleLabel">
+      <property name="font">
+       <font>
+        <pointsize>16</pointsize>
+        <weight>75</weight>
+        <bold>true</bold>
+       </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">color: #2c3e50;
+padding: 10px;
+background-color: #ecf0f1;
+border-radius: 5px;</string>
+      </property>
+      <property name="text">
+       <string>Aplikasi Deteksi dan Klasifikasi Sampah Sungai</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <layout class="QHBoxLayout" name="horizontalLayout">
+      <item>
+       <widget class="QGroupBox" name="originalGroupBox">
+        <property name="title">
+         <string>Citra Asli</string>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">QGroupBox {
+    border: 2px solid #3498db;
+    border-radius: 5px;
+    margin-top: 1ex;
+    font-weight: bold;
+    color: #2c3e50;
+}
+
+QGroupBox::title {
+    subcontrol-origin: margin;
+    subcontrol-position: top center;
+    padding: 0 5px;
+    color: #3498db;
+}</string>
+        </property>
+        <layout class="QVBoxLayout" name="verticalLayout_2">
+         <item>
+          <widget class="QLabel" name="originalImageLabel">
+           <property name="minimumSize">
+            <size>
+             <width>350</width>
+             <height>300</height>
+            </size>
+           </property>
+           <property name="styleSheet">
+            <string notr="true">border: 1px solid #bdc3c7;
+background-color: #ecf0f1;</string>
+           </property>
+           <property name="text">
+            <string>Citra akan ditampilkan di sini</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="loadImageButton">
+           <property name="styleSheet">
+            <string notr="true">QPushButton {
+    background-color: #3498db;
+    color: white;
+    border-radius: 5px;
+    padding: 8px;
+    font-weight: bold;
+}
+
+QPushButton:hover {
+    background-color: #2980b9;
+}
+
+QPushButton:pressed {
+    background-color: #1c6ea4;
+}</string>
+           </property>
+           <property name="text">
+            <string>Muat Citra</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item>
+       <widget class="QGroupBox" name="edgeGroupBox">
+        <property name="title">
+         <string>Citra Deteksi Tepi</string>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">QGroupBox {
+    border: 2px solid #e74c3c;
+    border-radius: 5px;
+    margin-top: 1ex;
+    font-weight: bold;
+    color: #2c3e50;
+}
+
+QGroupBox::title {
+    subcontrol-origin: margin;
+    subcontrol-position: top center;
+    padding: 0 5px;
+    color: #e74c3c;
+}</string>
+        </property>
+        <layout class="QVBoxLayout" name="verticalLayout_3">
+         <item>
+          <widget class="QLabel" name="edgeImageLabel">
+           <property name="minimumSize">
+            <size>
+             <width>350</width>
+             <height>300</height>
+            </size>
+           </property>
+           <property name="styleSheet">
+            <string notr="true">border: 1px solid #bdc3c7;
+background-color: #ecf0f1;</string>
+           </property>
+           <property name="text">
+            <string>Hasil deteksi tepi akan ditampilkan di sini</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="detectEdgeButton">
+           <property name="styleSheet">
+            <string notr="true">QPushButton {
+    background-color: #e74c3c;
+    color: white;
+    border-radius: 5px;
+    padding: 8px;
+    font-weight: bold;
+}
+
+QPushButton:hover {
+    background-color: #c0392b;
+}
+
+QPushButton:pressed {
+    background-color: #a93226;
+}</string>
+           </property>
+           <property name="text">
+            <string>Deteksi Tepi</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item>
+       <widget class="QGroupBox" name="classifiedGroupBox">
+        <property name="title">
+         <string>Hasil Klasifikasi</string>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">QGroupBox {
+    border: 2px solid #2ecc71;
+    border-radius: 5px;
+    margin-top: 1ex;
+    font-weight: bold;
+    color: #2c3e50;
+}
+
+QGroupBox::title {
+    subcontrol-origin: margin;
+    subcontrol-position: top center;
+    padding: 0 5px;
+    color: #2ecc71;
+}</string>
+        </property>
+        <layout class="QVBoxLayout" name="verticalLayout_4">
+         <item>
+          <widget class="QLabel" name="classifiedImageLabel">
+           <property name="minimumSize">
+            <size>
+             <width>350</width>
+             <height>300</height>
+            </size>
+           </property>
+           <property name="styleSheet">
+            <string notr="true">border: 1px solid #bdc3c7;
+background-color: #ecf0f1;</string>
+           </property>
+           <property name="text">
+            <string>Hasil klasifikasi akan ditampilkan di sini</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="classifyButton">
+           <property name="styleSheet">
+            <string notr="true">QPushButton {
+    background-color: #2ecc71;
+    color: white;
+    border-radius: 5px;
+    padding: 8px;
+    font-weight: bold;
+}
+
+QPushButton:hover {
+    background-color: #27ae60;
+}
+
+QPushButton:pressed {
+    background-color: #1e8449;
+}</string>
+           </property>
+           <property name="text">
+            <string>Klasifikasi Sampah</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+     </layout>
+    </item>
+    <item>
+     <layout class="QHBoxLayout" name="horizontalLayout_2">
+      <item>
+       <widget class="QGroupBox" name="settingsGroupBox">
+        <property name="title">
+         <string>Pengaturan Deteksi Tepi</string>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">QGroupBox {
+    border: 2px solid #9b59b6;
+    border-radius: 5px;
+    margin-top: 1ex;
+    font-weight: bold;
+    color: #2c3e50;
+}
+
+QGroupBox::title {
+    subcontrol-origin: margin;
+    subcontrol-position: top center;
+    padding: 0 5px;
+    color: #9b59b6;
+}</string>
+        </property>
+        <layout class="QHBoxLayout" name="horizontalLayout_3">
+         <item>
+          <widget class="QLabel" name="methodLabel">
+           <property name="text">
+            <string>Metode:</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QComboBox" name="methodComboBox">
+           <property name="styleSheet">
+            <string notr="true">padding: 5px;</string>
+           </property>
+           <item>
+            <property name="text">
+             <string>Sobel</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Prewitt</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Canny</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Laplacian</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="thresholdLabel">
+           <property name="text">
+            <string>Threshold:</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QSlider" name="thresholdSlider">
+           <property name="minimum">
+            <number>0</number>
+           </property>
+           <property name="maximum">
+            <number>255</number>
+           </property>
+           <property name="value">
+            <number>100</number>
+           </property>
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="thresholdValueLabel">
+           <property name="text">
+            <string>100</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QCheckBox" name="enhanceCheckBox">
+           <property name="text">
+            <string>Tingkatkan Kontras</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="saveButton">
+           <property name="styleSheet">
+            <string notr="true">QPushButton {
+    background-color: #f39c12;
+    color: white;
+    border-radius: 5px;
+    padding: 8px;
+    font-weight: bold;
+}
+
+QPushButton:hover {
+    background-color: #d35400;
+}
+
+QPushButton:pressed {
+    background-color: #a04000;
+}</string>
+           </property>
+           <property name="text">
+            <string>Simpan Hasil</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+     </layout>
+    </item>
+    <item>
+     <widget class="QTabWidget" name="resultsTabWidget">
+      <property name="styleSheet">
+       <string notr="true">QTabWidget::pane {
+    border: 1px solid #bdc3c7;
+    background: white;
+    border-radius: 5px;
+}
+
+QTabBar::tab {
+    background: #ecf0f1;
+    border: 1px solid #bdc3c7;
+    padding: 8px 12px;
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+}
+
+QTabBar::tab:selected {
+    background: #3498db;
+    color: white;
+}
+
+QTabBar::tab:hover:!selected {
+    background: #d6eaf8;
+}</string>
+      </property>
+      <property name="currentIndex">
+       <number>0</number>
+      </property>
+      <widget class="QWidget" name="tableTab">
+       <attribute name="title">
+        <string>Tabel Klasifikasi</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout_5">
+        <item>
+         <widget class="QTableWidget" name="classificationTable">
+          <property name="alternatingRowColors">
+           <bool>true</bool>
+          </property>
+          <property name="selectionMode">
+           <enum>QAbstractItemView::SingleSelection</enum>
+          </property>
+          <property name="selectionBehavior">
+           <enum>QAbstractItemView::SelectRows</enum>
+          </property>
+          <property name="sortingEnabled">
+           <bool>true</bool>
+          </property>
+          <attribute name="horizontalHeaderStretchLastSection">
+           <bool>true</bool>
+          </attribute>
+          <column>
+           <property name="text">
+            <string>ID</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>Jenis Sampah</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>Luas (px²)</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>Tingkat Keyakinan</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>Posisi X</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>Posisi Y</string>
+           </property>
+          </column>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="summaryTab">
+       <attribute name="title">
+        <string>Ringkasan</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout_6">
+        <item>
+         <widget class="QGroupBox" name="summaryGroupBox">
+          <property name="title">
+           <string>Ringkasan Klasifikasi</string>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">QGroupBox {
+    border: 2px solid #f39c12;
+    border-radius: 5px;
+    margin-top: 1ex;
+    font-weight: bold;
+    color: #2c3e50;
+}
+
+QGroupBox::title {
+    subcontrol-origin: margin;
+    subcontrol-position: top center;
+    padding: 0 5px;
+    color: #f39c12;
+}</string>
+          </property>
+          <layout class="QGridLayout" name="gridLayout">
+           <item row="0" column="0">
+            <widget class="QLabel" name="label">
+             <property name="font">
+              <font>
+               <weight>75</weight>
+               <bold>true</bold>
+              </font>
+             </property>
+             <property name="text">
+              <string>Total Objek Terdeteksi:</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="1">
+            <widget class="QLabel" name="totalObjectsLabel">
+             <property name="font">
+              <font>
+               <pointsize>12</pointsize>
+               <weight>75</weight>
+               <bold>true</bold>
+              </font>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">color: #e74c3c;</string>
+             </property>
+             <property name="text">
+              <string>0</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="0">
+            <widget class="QLabel" name="label_2">
+             <property name="font">
+              <font>
+               <weight>75</weight>
+               <bold>true</bold>
+              </font>
+             </property>
+             <property name="text">
+              <string>Total Luas Sampah:</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="1">
+            <widget class="QLabel" name="totalAreaLabel">
+             <property name="font">
+              <font>
+               <pointsize>12</pointsize>
+               <weight>75</weight>
+               <bold>true</bold>
+              </font>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">color: #e74c3c;</string>
+             </property>
+             <property name="text">
+              <string>0 px²</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="0">
+            <widget class="QLabel" name="label_3">
+             <property name="font">
+              <font>
+               <weight>75</weight>
+               <bold>true</bold>
+              </font>
+             </property>
+             <property name="text">
+              <string>Objek Keyakinan Tinggi:</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="1">
+            <widget class="QLabel" name="highConfidenceLabel">
+             <property name="font">
+              <font>
+               <pointsize>12</pointsize>
+               <weight>75</weight>
+               <bold>true</bold>
+              </font>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">color: #e74c3c;</string>
+             </property>
+             <property name="text">
+              <string>0</string>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="0">
+            <widget class="QLabel" name="label_4">
+             <property name="font">
+              <font>
+               <weight>75</weight>
+               <bold>true</bold>
+              </font>
+             </property>
+             <property name="text">
+              <string>Breakdown Jenis Sampah:</string>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="1">
+            <widget class="QLabel" name="typeBreakdownLabel">
+             <property name="font">
+              <font>
+               <weight>75</weight>
+               <bold>true</bold>
+              </font>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">color: #2c3e50;
+background-color: #ecf0f1;
+padding: 5px;
+border-radius: 3px;</string>
+             </property>
+             <property name="text">
+              <string>Tidak ada</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
