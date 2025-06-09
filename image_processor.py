@@ -60,3 +60,94 @@ class ImageProcessor:
         abs_laplacian = np.uint8(255 * np.absolute(laplacian) / np.max(np.absolute(laplacian)))
         _, binary_edge = cv2.threshold(abs_laplacian, threshold_value, 255, cv2.THRESH_BINARY)
         return binary_edge
+    
+    @staticmethod
+    def extract_wavelet_features(image):
+        """
+        Ekstraksi fitur wavelet Haar dari citra.
+        Input:
+            - image: Citra input (BGR atau grayscale)
+        Output:
+            - Vektor fitur numpy (1D), berupa mean dari setiap subband wavelet
+        """
+        # Konversi ke grayscale jika belum
+        if len(image.shape) == 3:
+            image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+            
+        # Resize ke 256x256
+        image = cv2.resize(image, (256, 256)).astype(np.float32)
+        
+        rows, cols = image.shape
+        temp = np.zeros_like(image)
+        
+        # Transformasi horizontal (baris)
+        for i in range(rows):
+            for j in range(0, cols, 2):
+                avg = (image[i, j] + image[i, j+1]) / 2
+                diff = (image[i, j] - image[i, j+1]) / 2
+                temp[i, j // 2] = avg
+                temp[i, (j // 2) + cols // 2] = diff
+                
+        result = np.zeros_like(temp)
+        
+        # Transformasi vertikal (kolom)
+        for j in range(cols):
+            for i in range(0, rows, 2):
+                avg = (temp[i, j] + temp[i+1, j]) / 2
+                diff = (temp[i, j] - temp[i+1, j]) / 2
+                result[i // 2, j] = avg
+                result[(i // 2) + rows // 2, j] = diff
+                
+        # Subband hasil
+        cA = result[0:rows // 2, 0:cols // 2]
+        cH = result[0:rows // 2, cols // 2:]
+        cV = result[rows // 2:, 0:cols // 2]
+        cD = result[rows // 2:, cols // 2:]
+        
+        # Ekstraksi fitur (mean dari setiap subband)
+        features = [
+            np.mean(np.abs(cA)),
+            np.mean(np.abs(cH)),
+            np.mean(np.abs(cV)),
+            np.mean(np.abs(cD))
+        ]
+        
+        return np.array(features)
+    
+    @staticmethod
+    def extract_color_moments(image):
+        """
+        Ekstraksi fitur color moments (mean, standard deviation, skewness) untuk setiap channel warna.
+        Input:
+            - image: Citra input (BGR)
+        Output:
+            - Vektor fitur numpy (1D) dengan 9 nilai (3 moments x 3 channels)
+        """
+        # Pastikan citra dalam format BGR
+        if len(image.shape) != 3:
+            raise ValueError("Citra harus dalam format BGR (3 channel)")
+            
+        # Inisialisasi array untuk menyimpan fitur
+        features = []
+        
+        # Proses setiap channel (B, G, R)
+        for channel in range(3):
+            # Ambil channel
+            channel_data = image[:, :, channel].astype(np.float32)
+            
+            # 1. Mean (Moment pertama)
+            mean = np.mean(channel_data)
+            
+            # 2. Standard Deviation (Moment kedua)
+            # Hitung variance manual
+            variance = np.mean((channel_data - mean) ** 2)
+            std_dev = np.sqrt(variance)
+            
+            # 3. Skewness (Moment ketiga)
+            # Hitung skewness manual
+            skewness = np.mean(((channel_data - mean) / (std_dev + 1e-6)) ** 3)
+            
+            # Tambahkan ke list fitur
+            features.extend([mean, std_dev, skewness])
+            
+        return np.array(features)
