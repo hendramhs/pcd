@@ -1,0 +1,315 @@
+from PyQt5 import QtWidgets, uic
+from PyQt5.QtWidgets import QFileDialog, QMessageBox, QTableWidgetItem, QHeaderView
+from PyQt5.QtCore import Qt
+import cv2
+import os
+
+from image_processor import ImageProcessor
+from trash_classifier import TrashClassifier
+from utils import Utils
+
+class TrashClassificationUI(QtWidgets.QMainWindow):
+    def __init__(self):
+        super(TrashClassificationUI, self).__init__()
+        # Load UI file
+        uic.loadUi('trash_detection_app.ui', self)
+        
+        # Initialize variables
+        self.original_image = None
+        self.edge_image = None
+        self.classified_image = None
+        self.current_method = 'Sobel'
+        self.threshold_value = 100
+        self.trash_objects = []
+        
+        # Connect signals and slots
+        self.loadImageButton.clicked.connect(self.load_image)
+        self.detectEdgeButton.clicked.connect(self.detect_edges)
+        self.classifyButton.clicked.connect(self.classify_trash)
+        self.saveButton.clicked.connect(self.save_result)
+        self.methodComboBox.currentTextChanged.connect(self.update_method)
+        self.thresholdSlider.valueChanged.connect(self.update_threshold)
+        self.enhanceCheckBox.stateChanged.connect(self.detect_edges)
+        
+        # Set initial state
+        self.detectEdgeButton.setEnabled(False)
+        self.classifyButton.setEnabled(False)
+        self.saveButton.setEnabled(False)
+        
+        # Status bar initialization
+        self.statusbar.showMessage('Siap untuk memuat citra sampah sungai')
+        
+        # Initialize classification table
+        self.setup_classification_table()
+        
+        # Initialize summary labels
+        self.update_summary_display()
+    
+    def setup_classification_table(self):
+        """Setup table for displaying classification results"""
+        try:
+            # Configure table
+            self.classificationTable.setColumnCount(6)
+            self.classificationTable.setHorizontalHeaderLabels([
+                'ID', 'Jenis Sampah', 'Luas (px²)', 'Tingkat Keyakinan', 'Posisi X', 'Posisi Y'
+            ])
+            
+            # Set column widths
+            header = self.classificationTable.horizontalHeader()
+            header.setSectionResizeMode(0, QHeaderView.ResizeToContents)  # ID
+            header.setSectionResizeMode(1, QHeaderView.Stretch)           # Jenis Sampah
+            header.setSectionResizeMode(2, QHeaderView.ResizeToContents)  # Luas
+            header.setSectionResizeMode(3, QHeaderView.ResizeToContents)  # Keyakinan
+            header.setSectionResizeMode(4, QHeaderView.ResizeToContents)  # Posisi X
+            header.setSectionResizeMode(5, QHeaderView.ResizeToContents)  # Posisi Y
+            
+            # Set alternating row colors
+            self.classificationTable.setAlternatingRowColors(True)
+            
+        except AttributeError:
+            print("Classification table not found in UI")
+    
+    def load_image(self):
+        options = QFileDialog.Options()
+        file_name, _ = QFileDialog.getOpenFileName(
+            self, "Pilih Citra Sampah Sungai", "", 
+            "Citra (*.png *.jpg *.jpeg *.bmp);;Semua File (*)", 
+            options=options
+        )
+        
+        if file_name:
+            try:
+                # Load image using OpenCV
+                self.original_image = cv2.imread(file_name)
+                if self.original_image is None:
+                    raise Exception("Gagal memuat citra")
+                
+                # Convert to RGB for display
+                display_image = cv2.cvtColor(self.original_image, cv2.COLOR_BGR2RGB)
+                
+                # Display original image
+                Utils.display_image(display_image, self.originalImageLabel)
+                
+                # Enable detect button
+                self.detectEdgeButton.setEnabled(True)
+                
+                # Update status
+                self.statusbar.showMessage(f'Citra dimuat: {os.path.basename(file_name)}')
+                
+                # Clear previous results
+                self.reset_results()
+                
+            except Exception as e:
+                QMessageBox.critical(self, "Error", f"Gagal memuat citra: {str(e)}")
+    
+    def reset_results(self):
+        """Reset all previous results"""
+        self.edgeImageLabel.setText("Hasil deteksi tepi akan ditampilkan di sini")
+        self.classifiedImageLabel.setText("Hasil klasifikasi akan ditampilkan di sini")
+        self.edge_image = None
+        self.classified_image = None
+        self.trash_objects = []
+        self.classifyButton.setEnabled(False)
+        self.saveButton.setEnabled(False)
+        
+        # Clear table
+        try:
+            self.classificationTable.setRowCount(0)
+        except AttributeError:
+            pass
+        
+        # Update summary
+        self.update_summary_display()
+    
+    def detect_edges(self):
+        if self.original_image is None:
+            return
+        
+        try:
+            # Convert to grayscale menggunakan fungsi manual
+            gray_image = ImageProcessor.convert_to_grayscale(self.original_image)
+            
+            # Apply contrast enhancement if checked
+            if self.enhanceCheckBox.isChecked():
+                gray_image = ImageProcessor.enhance_contrast(gray_image)
+            
+            # Apply edge detection based on selected method
+            if self.current_method == 'Sobel':
+                self.edge_image = ImageProcessor.sobel_edge_detection(gray_image, self.threshold_value)
+            elif self.current_method == 'Prewitt':
+                self.edge_image = ImageProcessor.prewitt_edge_detection(gray_image, self.threshold_value)
+            elif self.current_method == 'Canny':
+                self.edge_image = ImageProcessor.canny_edge_detection(gray_image, self.threshold_value)
+            elif self.current_method == 'Laplacian':
+                self.edge_image = ImageProcessor.laplacian_edge_detection(gray_image, self.threshold_value)
+            
+            # Display edge image
+            Utils.display_image(self.edge_image, self.edgeImageLabel, is_gray=True)
+            
+            # Enable classify button
+            self.classifyButton.setEnabled(True)
+            
+            # Update status
+            self.statusbar.showMessage(f'Deteksi tepi selesai menggunakan metode {self.current_method}')
+            
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Gagal mendeteksi tepi: {str(e)}")
+    
+    def classify_trash(self):
+        """Classify detected trash objects based on geometric features"""
+        if self.edge_image is None:
+            return
+        
+        try:
+            # Find contours in the edge image
+            contours, _ = cv2.findContours(self.edge_image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+            
+            # Filter contours by area to remove noise
+            min_contour_area = 150  # Minimum area for valid trash objects
+            valid_contours = [cnt for cnt in contours if cv2.contourArea(cnt) > min_contour_area]
+            
+            # Create visualization image
+            self.classified_image = cv2.cvtColor(self.original_image.copy(), cv2.COLOR_BGR2RGB)
+            
+            # Clear previous results
+            self.trash_objects = []
+            
+            # Classify each contour
+            for i, contour in enumerate(valid_contours):
+                classification_result = TrashClassifier.classify_contour(contour, i)
+                if classification_result:
+                    self.trash_objects.append(classification_result)
+                    self.classified_image = TrashClassifier.draw_classification_result(
+                        self.classified_image, contour, classification_result
+                    )
+            
+            # Display classified image
+            Utils.display_image(self.classified_image, self.classifiedImageLabel)
+            
+            # Update classification table
+            self.update_classification_table()
+            
+            # Update summary
+            self.update_summary_display()
+            
+            # Enable save button
+            self.saveButton.setEnabled(True)
+            
+            # Update status
+            self.statusbar.showMessage(f'Klasifikasi selesai: {len(self.trash_objects)} objek sampah terdeteksi')
+            
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Gagal mengklasifikasi sampah: {str(e)}")
+    
+    def update_classification_table(self):
+        """Update the classification results table"""
+        try:
+            self.classificationTable.setRowCount(len(self.trash_objects))
+            
+            for i, obj in enumerate(self.trash_objects):
+                # ID
+                self.classificationTable.setItem(i, 0, QTableWidgetItem(str(obj['id'])))
+                
+                # Jenis Sampah
+                type_item = QTableWidgetItem(obj['type'])
+                if obj['confidence'] >= 80:
+                    type_item.setBackground(Qt.green)
+                elif obj['confidence'] >= 60:
+                    type_item.setBackground(Qt.yellow)
+                else:
+                    type_item.setBackground(Qt.red)
+                self.classificationTable.setItem(i, 1, type_item)
+                
+                # Luas
+                self.classificationTable.setItem(i, 2, QTableWidgetItem(str(obj['area'])))
+                
+                # Tingkat Keyakinan
+                confidence_item = QTableWidgetItem(f"{obj['confidence']}%")
+                self.classificationTable.setItem(i, 3, confidence_item)
+                
+                # Posisi X dan Y
+                cx, cy = obj['centroid']
+                self.classificationTable.setItem(i, 4, QTableWidgetItem(str(cx)))
+                self.classificationTable.setItem(i, 5, QTableWidgetItem(str(cy)))
+                
+        except AttributeError:
+            print("Classification table not available")
+    
+    def update_summary_display(self):
+        """Update summary statistics display"""
+        try:
+            # Count by type
+            type_counts = {}
+            total_area = 0
+            high_confidence_count = 0
+            
+            for obj in self.trash_objects:
+                obj_type = obj['type']
+                type_counts[obj_type] = type_counts.get(obj_type, 0) + 1
+                total_area += obj['area']
+                if obj['confidence'] >= 80:
+                    high_confidence_count += 1
+            
+            # Update labels
+            if hasattr(self, 'totalObjectsLabel'):
+                self.totalObjectsLabel.setText(str(len(self.trash_objects)))
+            
+            if hasattr(self, 'totalAreaLabel'):
+                self.totalAreaLabel.setText(f"{total_area:,} px²")
+            
+            if hasattr(self, 'highConfidenceLabel'):
+                self.highConfidenceLabel.setText(str(high_confidence_count))
+            
+            # Update type breakdown
+            type_summary = []
+            for trash_type, count in type_counts.items():
+                type_summary.append(f"{trash_type}: {count}")
+            
+            if hasattr(self, 'typeBreakdownLabel'):
+                self.typeBreakdownLabel.setText('\n'.join(type_summary) if type_summary else 'Tidak ada')
+                
+        except Exception as e:
+            print(f"Error updating summary: {str(e)}")
+    
+    def update_method(self, method):
+        self.current_method = method
+        if self.original_image is not None:
+            self.detect_edges()
+    
+    def update_threshold(self, value):
+        self.threshold_value = value
+        try:
+            self.thresholdValueLabel.setText(str(value))
+        except AttributeError:
+            pass
+        if self.original_image is not None:
+            self.detect_edges()
+    
+    def save_result(self):
+        if self.classified_image is None:
+            return
+        
+        options = QFileDialog.Options()
+        file_name, _ = QFileDialog.getSaveFileName(
+            self, "Simpan Hasil Klasifikasi", "", 
+            "PNG (*.png);;JPEG (*.jpg *.jpeg);;BMP (*.bmp)", 
+            options=options
+        )
+        
+        if file_name:
+            try:
+                if not any(file_name.endswith(ext) for ext in ['.png', '.jpg', '.jpeg', '.bmp']):
+                    file_name += '.png'
+                
+                # Convert RGB back to BGR for saving
+                save_image = cv2.cvtColor(self.classified_image, cv2.COLOR_RGB2BGR)
+                cv2.imwrite(file_name, save_image)
+                
+                # Also save classification report
+                report_file = file_name.rsplit('.', 1)[0] + '_report.txt'
+                Utils.save_classification_report(report_file, self.trash_objects)
+                
+                self.statusbar.showMessage(f'Hasil disimpan ke: {os.path.basename(file_name)}')
+                
+            except Exception as e:
+                QMessageBox.critical(self, "Error", f"Gagal menyimpan hasil: {str(e)}")

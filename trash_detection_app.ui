@@ -45,9 +45,6 @@ border-radius: 5px;</string>
      <layout class="QHBoxLayout" name="horizontalLayout">
       <item>
        <widget class="QGroupBox" name="originalGroupBox">
-        <property name="title">
-         <string>Citra Asli</string>
-        </property>
         <property name="styleSheet">
          <string notr="true">QGroupBox {
     border: 2px solid #3498db;
@@ -63,6 +60,9 @@ QGroupBox::title {
     padding: 0 5px;
     color: #3498db;
 }</string>
+        </property>
+        <property name="title">
+         <string>Citra Asli</string>
         </property>
         <layout class="QVBoxLayout" name="verticalLayout_2">
          <item>
@@ -114,9 +114,6 @@ QPushButton:pressed {
       </item>
       <item>
        <widget class="QGroupBox" name="edgeGroupBox">
-        <property name="title">
-         <string>Citra Deteksi Tepi</string>
-        </property>
         <property name="styleSheet">
          <string notr="true">QGroupBox {
     border: 2px solid #e74c3c;
@@ -132,6 +129,9 @@ QGroupBox::title {
     padding: 0 5px;
     color: #e74c3c;
 }</string>
+        </property>
+        <property name="title">
+         <string>Citra Deteksi Tepi</string>
         </property>
         <layout class="QVBoxLayout" name="verticalLayout_3">
          <item>
@@ -183,9 +183,6 @@ QPushButton:pressed {
       </item>
       <item>
        <widget class="QGroupBox" name="classifiedGroupBox">
-        <property name="title">
-         <string>Hasil Klasifikasi</string>
-        </property>
         <property name="styleSheet">
          <string notr="true">QGroupBox {
     border: 2px solid #2ecc71;
@@ -201,6 +198,9 @@ QGroupBox::title {
     padding: 0 5px;
     color: #2ecc71;
 }</string>
+        </property>
+        <property name="title">
+         <string>Hasil Klasifikasi</string>
         </property>
         <layout class="QVBoxLayout" name="verticalLayout_4">
          <item>
@@ -256,9 +256,6 @@ QPushButton:pressed {
      <layout class="QHBoxLayout" name="horizontalLayout_2">
       <item>
        <widget class="QGroupBox" name="settingsGroupBox">
-        <property name="title">
-         <string>Pengaturan Deteksi Tepi</string>
-        </property>
         <property name="styleSheet">
          <string notr="true">QGroupBox {
     border: 2px solid #9b59b6;
@@ -274,6 +271,9 @@ QGroupBox::title {
     padding: 0 5px;
     color: #9b59b6;
 }</string>
+        </property>
+        <property name="title">
+         <string>Pengaturan Deteksi Tepi</string>
         </property>
         <layout class="QHBoxLayout" name="horizontalLayout_3">
          <item>
@@ -348,6 +348,13 @@ QGroupBox::title {
           </widget>
          </item>
          <item>
+          <widget class="QPushButton" name="pushButton">
+           <property name="text">
+            <string>Zoom</string>
+           </property>
+          </widget>
+         </item>
+         <item>
           <widget class="QPushButton" name="saveButton">
            <property name="styleSheet">
             <string notr="true">QPushButton {
@@ -403,7 +410,7 @@ QTabBar::tab:hover:!selected {
 }</string>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="tableTab">
        <attribute name="title">
@@ -468,9 +475,6 @@ QTabBar::tab:hover:!selected {
        <layout class="QVBoxLayout" name="verticalLayout_6">
         <item>
          <widget class="QGroupBox" name="summaryGroupBox">
-          <property name="title">
-           <string>Ringkasan Klasifikasi</string>
-          </property>
           <property name="styleSheet">
            <string notr="true">QGroupBox {
     border: 2px solid #f39c12;
@@ -486,6 +490,9 @@ QGroupBox::title {
     padding: 0 5px;
     color: #f39c12;
 }</string>
+          </property>
+          <property name="title">
+           <string>Ringkasan Klasifikasi</string>
           </property>
           <layout class="QGridLayout" name="gridLayout">
            <item row="0" column="0">
