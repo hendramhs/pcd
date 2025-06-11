@@ -29,7 +29,8 @@ class TrashClassificationUI(QtWidgets.QMainWindow):
         self.saveButton.clicked.connect(self.save_result)
         self.methodComboBox.currentTextChanged.connect(self.update_method)
         self.thresholdSlider.valueChanged.connect(self.update_threshold)
-        self.enhanceCheckBox.stateChanged.connect(self.detect_edges)
+        # Hapus koneksi enhanceCheckBox untuk mencegah pemrosesan otomatis
+        # self.enhanceCheckBox.stateChanged.connect(self.detect_edges)
         
         # Set initial state
         self.detectEdgeButton.setEnabled(False)
@@ -44,6 +45,9 @@ class TrashClassificationUI(QtWidgets.QMainWindow):
         
         # Initialize summary labels
         self.update_summary_display()
+        
+        # Update UI text based on initial method
+        self.update_ui_text()
     
     def setup_classification_table(self):
         """Setup table for displaying classification results"""
@@ -104,7 +108,12 @@ class TrashClassificationUI(QtWidgets.QMainWindow):
     
     def reset_results(self):
         """Reset all previous results"""
-        self.edgeImageLabel.setText("Hasil deteksi tepi akan ditampilkan di sini")
+        # Update label text based on current method
+        if self.current_method == 'Wavelet':
+            self.edgeImageLabel.setText("Hasil deteksi tekstur akan ditampilkan di sini")
+        else:
+            self.edgeImageLabel.setText("Hasil deteksi tepi akan ditampilkan di sini")
+        
         self.classifiedImageLabel.setText("Hasil klasifikasi akan ditampilkan di sini")
         self.edge_image = None
         self.classified_image = None
@@ -283,8 +292,34 @@ class TrashClassificationUI(QtWidgets.QMainWindow):
     
     def update_method(self, method):
         self.current_method = method
-        if self.original_image is not None:
-            self.detect_edges()
+        # Update UI text based on selected method
+        self.update_ui_text()
+        # Don't automatically process image when changing method
+        # User needs to click the button manually
+        
+    def update_ui_text(self):
+        """Update UI text based on current method"""
+        if self.current_method == 'Wavelet':
+            # Change button text to texture detection
+            self.detectEdgeButton.setText("Deteksi Tekstur")
+            # Change group box title
+            self.edgeGroupBox.setTitle("Citra Deteksi Tekstur")
+            # Change settings group title
+            self.settingsGroupBox.setTitle("Pengaturan Deteksi Tekstur")
+            # Update result label if no image processed yet
+            if self.edge_image is None:
+                self.edgeImageLabel.setText("Hasil deteksi tekstur akan ditampilkan di sini")
+        else:
+            # Change button text back to edge detection
+            self.detectEdgeButton.setText("Deteksi Tepi")
+            # Change group box title back
+            self.edgeGroupBox.setTitle("Citra Deteksi Tepi")
+            # Change settings group title back
+            self.settingsGroupBox.setTitle("Pengaturan Deteksi Tepi")
+            # Update result label if no image processed yet
+            if self.edge_image is None:
+                self.edgeImageLabel.setText("Hasil deteksi tepi akan ditampilkan di sini")
+        # Hapus panggilan detect_edges() dari sini
     
     def update_threshold(self, value):
         self.threshold_value = value
@@ -292,6 +327,7 @@ class TrashClassificationUI(QtWidgets.QMainWindow):
             self.thresholdValueLabel.setText(str(value))
         except AttributeError:
             pass
+        # Tetap real-time untuk threshold slider
         if self.original_image is not None:
             self.detect_edges()
     
