@@ -133,7 +133,7 @@ class TrashClassificationUI(QtWidgets.QMainWindow):
             if self.enhanceCheckBox.isChecked():
                 gray_image = ImageProcessor.enhance_contrast(gray_image)
             
-            # Apply edge detection based on selected method
+            # Apply detection based on selected method
             if self.current_method == 'Sobel':
                 self.edge_image = ImageProcessor.sobel_edge_detection(gray_image, self.threshold_value)
             elif self.current_method == 'Prewitt':
@@ -142,26 +142,30 @@ class TrashClassificationUI(QtWidgets.QMainWindow):
                 self.edge_image = ImageProcessor.canny_edge_detection(gray_image, self.threshold_value)
             elif self.current_method == 'Laplacian':
                 self.edge_image = ImageProcessor.laplacian_edge_detection(gray_image, self.threshold_value)
+            elif self.current_method == 'Wavelet':
+                # Untuk wavelet, gunakan analisis tekstur
+                self.edge_image = ImageProcessor.wavelet_texture_analysis(gray_image, self.threshold_value)
             
-            # Display edge image
+            # Display processed image
             Utils.display_image(self.edge_image, self.edgeImageLabel, is_gray=True)
             
             # Enable classify button
             self.classifyButton.setEnabled(True)
             
             # Update status
-            self.statusbar.showMessage(f'Deteksi tepi selesai menggunakan metode {self.current_method}')
+            method_name = 'analisis tekstur wavelet' if self.current_method == 'Wavelet' else f'deteksi tepi {self.current_method}'
+            self.statusbar.showMessage(f'Pemrosesan selesai menggunakan metode {method_name}')
             
         except Exception as e:
-            QMessageBox.critical(self, "Error", f"Gagal mendeteksi tepi: {str(e)}")
+            QMessageBox.critical(self, "Error", f"Gagal memproses citra: {str(e)}")
     
     def classify_trash(self):
-        """Classify detected trash objects based on geometric features"""
+        """Classify detected trash objects based on geometric features and texture"""
         if self.edge_image is None:
             return
         
         try:
-            # Find contours in the edge image
+            # Find contours in the processed image
             contours, _ = cv2.findContours(self.edge_image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
             
             # Filter contours by area to remove noise
@@ -174,9 +178,14 @@ class TrashClassificationUI(QtWidgets.QMainWindow):
             # Clear previous results
             self.trash_objects = []
             
+            # Determine if using texture analysis
+            use_texture = (self.current_method == 'Wavelet')
+            
             # Classify each contour
             for i, contour in enumerate(valid_contours):
-                classification_result = TrashClassifier.classify_contour(contour, i)
+                classification_result = TrashClassifier.classify_contour(
+                    contour, i, self.original_image if use_texture else None, use_texture
+                )
                 if classification_result:
                     self.trash_objects.append(classification_result)
                     self.classified_image = TrashClassifier.draw_classification_result(
@@ -196,7 +205,8 @@ class TrashClassificationUI(QtWidgets.QMainWindow):
             self.saveButton.setEnabled(True)
             
             # Update status
-            self.statusbar.showMessage(f'Klasifikasi selesai: {len(self.trash_objects)} objek sampah terdeteksi')
+            method_info = 'dengan analisis tekstur wavelet' if use_texture else 'berdasarkan fitur geometris'
+            self.statusbar.showMessage(f'Klasifikasi selesai {method_info}: {len(self.trash_objects)} objek sampah terdeteksi')
             
         except Exception as e:
             QMessageBox.critical(self, "Error", f"Gagal mengklasifikasi sampah: {str(e)}")

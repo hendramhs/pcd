@@ -4,8 +4,8 @@ import numpy as np
 
 class TrashClassifier:
     @staticmethod
-    def classify_contour(contour, obj_id):
-        """Classify a single contour based on geometric features"""
+    def classify_contour(contour, obj_id, original_image=None, use_texture=False):
+        """Classify a single contour based on geometric features and optionally texture features"""
         try:
             # Calculate basic geometric features
             area = cv2.contourArea(contour)
@@ -36,20 +36,38 @@ class TrashClassifier:
             else:
                 cx, cy = x + w//2, y + h//2
             
+            # Ekstraksi fitur tekstur wavelet jika diminta
+            texture_features = None
+            if use_texture and original_image is not None:
+                # Crop region of interest
+                roi = original_image[y:y+h, x:x+w]
+                if roi.size > 0:
+                    from image_processor import ImageProcessor
+                    texture_features = ImageProcessor.extract_wavelet_features(roi)
+            
             # Classification logic based on geometric features
             trash_type, confidence = TrashClassifier.determine_trash_type(
                 circularity, aspect_ratio, extent, solidity, area, w, h
             )
             
-            return {
+            result = {
                 'id': obj_id + 1,
                 'type': trash_type,
                 'confidence': confidence,
                 'area': int(area),
                 'centroid': (cx, cy),
                 'bounding_rect': (x, y, w, h),
-                'contour': contour
+                'circularity': round(circularity, 3),
+                'aspect_ratio': round(aspect_ratio, 3),
+                'extent': round(extent, 3),
+                'solidity': round(solidity, 3)
             }
+            
+            # Tambahkan fitur tekstur jika ada
+            if texture_features is not None:
+                result['texture_features'] = texture_features.tolist()
+            
+            return result
             
         except Exception as e:
             print(f"Error classifying contour {obj_id}: {str(e)}")

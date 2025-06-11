@@ -151,3 +151,58 @@ class ImageProcessor:
             features.extend([mean, std_dev, skewness])
             
         return np.array(features)
+    
+    @staticmethod
+    def wavelet_texture_analysis(image, threshold_value):
+        """
+        Analisis tekstur menggunakan transformasi wavelet Haar.
+        Menggunakan energy dari detail coefficients untuk deteksi objek berdasarkan tekstur.
+        """
+        # Konversi ke grayscale jika belum
+        if len(image.shape) == 3:
+            image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+            
+        # Resize ke 256x256
+        original_size = image.shape
+        image = cv2.resize(image, (256, 256)).astype(np.float32)
+        
+        rows, cols = image.shape
+        temp = np.zeros_like(image)
+        
+        # Transformasi horizontal (baris)
+        for i in range(rows):
+            for j in range(0, cols, 2):
+                avg = (image[i, j] + image[i, j+1]) / 2
+                diff = (image[i, j] - image[i, j+1]) / 2
+                temp[i, j // 2] = avg
+                temp[i, (j // 2) + cols // 2] = diff
+                
+        result = np.zeros_like(temp)
+        
+        # Transformasi vertikal (kolom)
+        for j in range(cols):
+            for i in range(0, rows, 2):
+                avg = (temp[i, j] + temp[i+1, j]) / 2
+                diff = (temp[i, j] - temp[i+1, j]) / 2
+                result[i // 2, j] = avg
+                result[(i // 2) + rows // 2, j] = diff
+                
+        # Subband hasil
+        cA = result[0:rows // 2, 0:cols // 2]  # Approximation
+        cH = result[0:rows // 2, cols // 2:]   # Horizontal detail
+        cV = result[rows // 2:, 0:cols // 2]   # Vertical detail
+        cD = result[rows // 2:, cols // 2:]    # Diagonal detail
+        
+        # Hitung energy dari detail coefficients untuk analisis tekstur
+        texture_energy = np.sqrt(cH**2 + cV**2 + cD**2)
+        
+        # Normalisasi ke range 0-255
+        texture_energy = np.uint8(255 * texture_energy / np.max(texture_energy))
+        
+        # Thresholding untuk segmentasi berdasarkan tekstur
+        _, texture_mask = cv2.threshold(texture_energy, threshold_value, 255, cv2.THRESH_BINARY)
+        
+        # Resize kembali ke ukuran asli
+        texture_mask = cv2.resize(texture_mask, (original_size[1], original_size[0]))
+        
+        return texture_mask
