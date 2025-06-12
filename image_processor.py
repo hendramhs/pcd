@@ -72,7 +72,7 @@ class ImageProcessor:
         """
         # Konversi ke grayscale jika belum
         if len(image.shape) == 3:
-            image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+            image = ImageProcessor.convert_to_grayscale(image)
             
         # Resize ke 256x256
         image = cv2.resize(image, (256, 256)).astype(np.float32)
@@ -192,7 +192,25 @@ class ImageProcessor:
         cH = result[0:rows // 2, cols // 2:]   # Horizontal detail
         cV = result[rows // 2:, 0:cols // 2]   # Vertical detail
         cD = result[rows // 2:, cols // 2:]    # Diagonal detail
+        # cA = result[0:rows // 2, 0:cols // 2]  # Approximation (kiri atas)
+        # cH = result[0:rows // 2, cols // 2:]   # Horizontal detail (kanan atas)
+        # cV = result[rows // 2:, 0:cols // 2]   # Vertical detail (kiri bawah)
+        # cD = result[rows // 2:, cols // 2:]    # Diagonal detail (kanan bawah)
         
+        # # Normalisasi setiap subband ke range 0-255
+        # def normalize_subband(subband):
+        #     subband_min = np.min(subband)
+        #     subband_max = np.max(subband)
+        #     if subband_max - subband_min > 0:
+        #         normalized = 255 * (subband - subband_min) / (subband_max - subband_min)
+        #     else:
+        #         normalized = np.zeros_like(subband)
+        #     return np.uint8(normalized)
+        
+        # cA_norm = normalize_subband(cA)
+        # cH_norm = normalize_subband(cH)
+        # cV_norm = normalize_subband(cV)
+        # cD_norm = normalize_subband(cD)
         # Hitung energy dari detail coefficients untuk analisis tekstur
         texture_energy = np.sqrt(cH**2 + cV**2 + cD**2)
         
@@ -202,7 +220,17 @@ class ImageProcessor:
         # Thresholding untuk segmentasi berdasarkan tekstur
         _, texture_mask = cv2.threshold(texture_energy, threshold_value, 255, cv2.THRESH_BINARY)
         
+        # Gabungkan keempat subband menjadi satu gambar
+        # Layout: cA (kiri atas), cH (kanan atas), cV (kiri bawah), cD (kanan bawah)
+        # wavelet_output = np.zeros((rows, cols), dtype=np.uint8)
+        # wavelet_output[0:rows // 2, 0:cols // 2] = cA_norm
+        # wavelet_output[0:rows // 2, cols // 2:] = cH_norm
+        # wavelet_output[rows // 2:, 0:cols // 2] = cV_norm
+        # wavelet_output[rows // 2:, cols // 2:] = cD_norm
+
         # Resize kembali ke ukuran asli
         texture_mask = cv2.resize(texture_mask, (original_size[1], original_size[0]))
+        # wavelet_output = cv2.resize(wavelet_output, (original_size[1], original_size[0]))
         
         return texture_mask
+        # return wavelet_output
