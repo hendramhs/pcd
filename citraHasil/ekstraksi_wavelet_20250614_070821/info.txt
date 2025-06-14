@@ -1,0 +1,7 @@
+Metode: Wavelet
+Threshold: 52
+Timestamp: 20250614_070821
+Enhance Contrast: Tidak
+
+File yang disimpan:
+- extraction_steps: wavelet_extraction_steps.png
