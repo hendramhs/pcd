@@ -1,0 +1,7 @@
+Metode: Sobel
+Threshold: 52
+Timestamp: 20250614_070244
+Enhance Contrast: Tidak
+
+File yang disimpan:
+- extraction_steps: sobel_extraction_steps.png

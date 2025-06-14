@@ -355,6 +355,13 @@ QGroupBox::title {
           </widget>
          </item>
          <item>
+          <widget class="QPushButton" name="pushButton_2">
+           <property name="text">
+            <string>simpan Ekstraksi</string>
+           </property>
+          </widget>
+         </item>
+         <item>
           <widget class="QPushButton" name="saveButton">
            <property name="styleSheet">
             <string notr="true">QPushButton {

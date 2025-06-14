@@ -27,6 +27,8 @@ class TrashClassificationUI(QtWidgets.QMainWindow):
         self.detectEdgeButton.clicked.connect(self.detect_edges)
         self.classifyButton.clicked.connect(self.classify_trash)
         self.saveButton.clicked.connect(self.save_result)
+        # Tambahkan koneksi untuk tombol simpan ekstraksi
+        self.pushButton_2.clicked.connect(self.save_extraction_steps)
         self.methodComboBox.currentTextChanged.connect(self.update_method)
         self.thresholdSlider.valueChanged.connect(self.update_threshold)
         # Hapus koneksi enhanceCheckBox untuk mencegah pemrosesan otomatis
@@ -36,6 +38,8 @@ class TrashClassificationUI(QtWidgets.QMainWindow):
         self.detectEdgeButton.setEnabled(False)
         self.classifyButton.setEnabled(False)
         self.saveButton.setEnabled(False)
+        # Tambahkan state untuk tombol ekstraksi
+        self.pushButton_2.setEnabled(False)
         
         # Status bar initialization
         self.statusbar.showMessage('Siap untuk memuat citra sampah sungai')
@@ -131,35 +135,57 @@ class TrashClassificationUI(QtWidgets.QMainWindow):
         self.update_summary_display()
     
     def detect_edges(self):
+        """Apply edge detection to the loaded image"""
         if self.original_image is None:
             return
         
         try:
-            # Convert to grayscale menggunakan fungsi manual
+            # Convert to grayscale untuk metode yang memerlukan
             gray_image = ImageProcessor.convert_to_grayscale(self.original_image)
             
             # Apply contrast enhancement if checked
             if self.enhanceCheckBox.isChecked():
                 gray_image = ImageProcessor.enhance_contrast(gray_image)
             
-            # Apply detection based on selected method
+            # Apply detection based on selected method dengan preprocessing
             if self.current_method == 'Sobel':
-                self.edge_image = ImageProcessor.sobel_edge_detection(gray_image, self.threshold_value)
+                # Gunakan enhanced Sobel dengan HSV dan adaptive thresholding
+                self.edge_image = ImageProcessor.enhanced_sobel_edge_detection(
+                    self.original_image, self.threshold_value, use_hsv=True, use_adaptive=True
+                )
             elif self.current_method == 'Prewitt':
-                self.edge_image = ImageProcessor.prewitt_edge_detection(gray_image, self.threshold_value)
+                # Untuk Prewitt, gunakan preprocessing HSV terlebih dahulu
+                if len(self.original_image.shape) == 3:
+                    preprocessed_image, _ = ImageProcessor.hsv_preprocessing(self.original_image)
+                else:
+                    preprocessed_image = gray_image
+                self.edge_image = ImageProcessor.prewitt_edge_detection(preprocessed_image, self.threshold_value)
             elif self.current_method == 'Canny':
-                self.edge_image = ImageProcessor.canny_edge_detection(gray_image, self.threshold_value)
+                # Gunakan enhanced Canny dengan preprocessing
+                self.edge_image = ImageProcessor.enhanced_canny_edge_detection(
+                    self.original_image, self.threshold_value, use_hsv=True, use_adaptive=True
+                )
             elif self.current_method == 'Laplacian':
-                self.edge_image = ImageProcessor.laplacian_edge_detection(gray_image, self.threshold_value)
+                # Untuk Laplacian, gunakan preprocessing HSV
+                if len(self.original_image.shape) == 3:
+                    preprocessed_image, _ = ImageProcessor.hsv_preprocessing(self.original_image)
+                else:
+                    preprocessed_image = gray_image
+                self.edge_image = ImageProcessor.laplacian_edge_detection(preprocessed_image, self.threshold_value)
             elif self.current_method == 'Wavelet':
-                # Untuk wavelet, gunakan analisis tekstur
-                self.edge_image = ImageProcessor.wavelet_texture_analysis(gray_image, self.threshold_value)
+                # Untuk wavelet, gunakan preprocessing HSV
+                if len(self.original_image.shape) == 3:
+                    preprocessed_image, _ = ImageProcessor.hsv_preprocessing(self.original_image)
+                else:
+                    preprocessed_image = gray_image
+                self.edge_image = ImageProcessor.wavelet_texture_analysis(preprocessed_image, self.threshold_value)
             
             # Display processed image
             Utils.display_image(self.edge_image, self.edgeImageLabel, is_gray=True)
             
-            # Enable classify button
+            # Enable classify button dan extraction save button
             self.classifyButton.setEnabled(True)
+            self.pushButton_2.setEnabled(True)  # Enable simpan ekstraksi
             
             # Update status
             method_name = 'analisis tekstur wavelet' if self.current_method == 'Wavelet' else f'deteksi tepi {self.current_method}'
@@ -331,8 +357,37 @@ class TrashClassificationUI(QtWidgets.QMainWindow):
         if self.original_image is not None:
             self.detect_edges()
     
+    def save_extraction_steps(self):
+        """Simpan tahapan ekstraksi dalam format gabungan"""
+        if self.original_image is None:
+            QMessageBox.warning(self, "Peringatan", "Tidak ada citra yang dimuat!")
+            return
+        
+        try:
+            # Simpan tahapan ekstraksi
+            output_dir, output_file = ImageProcessor.save_extraction_steps(
+                self.original_image, 
+                self.current_method, 
+                self.threshold_value,
+                self.enhanceCheckBox.isChecked()
+            )
+            
+            # Update status
+            self.statusbar.showMessage(f'Ekstraksi disimpan ke: {os.path.basename(output_dir)}')
+            
+            # Tampilkan dialog sukses
+            QMessageBox.information(
+                self, "Sukses", 
+                f"Tahapan ekstraksi {self.current_method} berhasil disimpan ke:\n{output_dir}"
+            )
+            
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Gagal menyimpan ekstraksi: {str(e)}")
+    
     def save_result(self):
+        """Simpan hasil klasifikasi (existing function)"""
         if self.classified_image is None:
+            QMessageBox.warning(self, "Peringatan", "Belum ada hasil klasifikasi!")
             return
         
         options = QFileDialog.Options()
